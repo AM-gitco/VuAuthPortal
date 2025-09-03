@@ -26,8 +26,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get user ID from session
-      const userId = req.session.userId;
+      // Get user ID from session and convert it to a number
+      const userId = parseInt(req.session.userId, 10);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
       
       const updatedUser = await storage.updateUserProfile(userId, degreeProgram, subjects);
       
