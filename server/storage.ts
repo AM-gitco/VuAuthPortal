@@ -1,0 +1,32 @@
+import { users, type User, type InsertUser } from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+export interface IStorage {
+  // User operations
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  createAdminUser(user: Omit<InsertUser, 'email'> & { email: string }): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserProfile(userId: number, degreeProgram: string, subjects: string[]): Promise<User | undefined>;
+}
+
+// Create and export the appropriate storage based on configuration
+import { config } from './config';
+import { MongoDBStorage } from './mongodb';
+import { JsonStorage } from './json_storage';
+
+let storage: IStorage;
+
+// Initialize storage with MongoDB if configured, with fallback to JsonStorage
+if (config.USE_MONGODB && config.MONGODB_URI) {
+  const jsonStorage = new JsonStorage(); // Create fallback storage
+  storage = new MongoDBStorage(jsonStorage);
+  console.log('Using MongoDB storage with JsonStorage fallback');
+} else {
+  storage = new JsonStorage();
+  console.log('Using JsonStorage (no MongoDB configured)');
+}
+
+export { storage };
