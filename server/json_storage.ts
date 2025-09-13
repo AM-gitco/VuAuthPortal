@@ -173,7 +173,14 @@ export class JsonStorage implements IStorage {
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     const index = this.users.findIndex(user => user.id === id);
     if (index === -1) return undefined;
-    this.users[index] = { ...this.users[index], ...updates };
+
+    const updatedUser = { ...this.users[index], ...updates };
+
+    if (updates.email) {
+      updatedUser.email_encrypted = this.encrypt(updates.email);
+    }
+
+    this.users[index] = updatedUser;
     this.saveData();
     return this.users[index];
   }
