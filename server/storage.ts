@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { users, type User, type InsertUser, InsertPendingUser, PendingUser, InsertOtp, OtpCode } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -6,10 +6,19 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailOrUsername(email: string, username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   createAdminUser(user: Omit<InsertUser, 'email'> & { email: string }): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
   updateUserProfile(userId: number, degreeProgram: string, subjects: string[]): Promise<User | undefined>;
+  createPendingUser(user: InsertPendingUser): Promise<PendingUser>;
+  getPendingUserByEmail(email: string): Promise<PendingUser | undefined>;
+  deletePendingUser(email: string): Promise<void>;
+
+  // OTP operations
+  createOtp(otp: InsertOtp): Promise<OtpCode>;
+  getOtp(email: string, code: string): Promise<OtpCode | undefined>;
+  markOtpAsUsed(id: number): Promise<void>;
 }
 
 // Create and export the appropriate storage based on configuration

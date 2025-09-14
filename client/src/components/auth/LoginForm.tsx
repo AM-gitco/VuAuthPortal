@@ -13,10 +13,9 @@ import { useLocation } from "wouter";
 interface LoginFormProps {
   onSwitchToSignup: () => void;
   onSwitchToForgotPassword: () => void;
-  onSwitchToOTP: (email: string) => void;
 }
 
-export function LoginForm({ onSwitchToSignup, onSwitchToForgotPassword, onSwitchToOTP }: LoginFormProps) {
+export function LoginForm({ onSwitchToSignup, onSwitchToForgotPassword }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -45,23 +44,21 @@ export function LoginForm({ onSwitchToSignup, onSwitchToForgotPassword, onSwitch
         return;
       }
 
-      // Sign in with OTP
-      const { error } = await supabase.auth.signInWithOtp({
+      // Sign in with password
+      const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
-        options: {
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
+        password: data.password,
       });
 
       if (error) throw error;
 
       toast({
-        title: "OTP Sent",
-        description: "A verification code has been sent to your email. Please check your inbox.",
+        title: "Login Successful",
+        description: "Redirecting to your dashboard...",
       });
       
-      // Switch to OTP verification form
-      onSwitchToOTP(data.email);
+      // Redirect to setup profile page
+      setLocation("/dashboard/setup-profile");
     } catch (error: any) {
       toast({
         title: "Login Failed",

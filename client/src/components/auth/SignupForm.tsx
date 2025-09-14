@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isVuEmail, NonVuEmailError } from "@/lib/supabase";
+import { isVuEmail, NonVuEmailError } from "@/lib/supabase";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 
 interface SignupFormProps {
@@ -34,31 +34,29 @@ export function SignupForm({ onSwitchToLogin, onSwitchToOTP }: SignupFormProps) 
     try {
       setIsSubmitting(true);
       
-      // Check if email is from VU domain
       if (!isVuEmail(data.email)) {
         throw new NonVuEmailError();
       }
 
-      // Sign up with OTP
-      const { error } = await supabase.auth.signInWithOtp({
-        email: data.email,
-        options: {
-          data: {
-            fullName: data.fullName,
-            username: data.username,
-          },
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to create account");
+      }
 
       toast({
-        title: "OTP Sent",
-        description: "A verification code has been sent to your email. Please check your inbox.",
+        title: "Verification Email Sent",
+        description: "A verification code and a magic link have been sent to your email.",
       });
       
-      // Switch to OTP verification form
       onSwitchToOTP(data.email);
     } catch (error: any) {
       toast({

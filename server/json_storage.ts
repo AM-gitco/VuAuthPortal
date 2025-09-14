@@ -207,7 +207,11 @@ export class JsonStorage implements IStorage {
     this.saveData();
   }
 
-  async createOtpCode(insertOtp: InsertOtp): Promise<OtpCode> {
+  async getUserByEmailOrUsername(email: string, username: string): Promise<User | undefined> {
+    return this.users.find(user => user.email === email || user.username === username);
+  }
+
+  async createOtp(insertOtp: InsertOtp): Promise<OtpCode> {
     const id = this.otpCodes.length > 0 ? Math.max(...this.otpCodes.map(o => o.id)) + 1 : 1;
     const otpCode: OtpCode = {
       ...insertOtp,
@@ -220,14 +224,9 @@ export class JsonStorage implements IStorage {
     return otpCode;
   }
 
-  async getValidOtpCode(email: string, code: string): Promise<OtpCode | undefined> {
+  async getOtp(email: string, code: string): Promise<OtpCode | undefined> {
     const now = new Date();
     return this.otpCodes.find(o => o.email === email && o.code === code && !o.isUsed && o.expiresAt > now);
-  }
-
-  async checkOtpCodeValidity(email: string, code: string): Promise<OtpCode | undefined> {
-    const now = new Date();
-    return this.otpCodes.find(o => o.email === email && o.code === code && o.expiresAt > now);
   }
 
   async markOtpAsUsed(id: number): Promise<void> {
