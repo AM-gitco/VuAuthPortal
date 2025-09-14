@@ -192,8 +192,16 @@ export class MongoDBStorage implements IStorage {
   }
 
   // OTP methods
-  async createOtpCode(insertOtp: InsertOtp): Promise<OtpCode> {
-    if (!this.connected) return this.fallbackStorage.createOtpCode(insertOtp);
+  async getUserByEmailOrUsername(email: string, username: string): Promise<User | undefined> {
+    if (!this.connected) return this.fallbackStorage.getUserByEmailOrUsername(email, username);
+
+    const user = await UserModel.findOne({ $or: [{ email }, { username }] });
+    return user ? user.toObject() as unknown as User : undefined;
+  }
+
+  // OTP methods
+  async createOtp(insertOtp: InsertOtp): Promise<OtpCode> {
+    if (!this.connected) return this.fallbackStorage.createOtp(insertOtp);
     
     // Get the next ID
     const maxIdOtp = await OtpCodeModel.findOne().sort('-id');
@@ -210,27 +218,14 @@ export class MongoDBStorage implements IStorage {
     return createdOtp.toObject() as unknown as OtpCode;
   }
 
-  async getValidOtpCode(email: string, code: string): Promise<OtpCode | undefined> {
-    if (!this.connected) return this.fallbackStorage.getValidOtpCode(email, code);
+  async getOtp(email: string, code: string): Promise<OtpCode | undefined> {
+    if (!this.connected) return this.fallbackStorage.getOtp(email, code);
     
     const now = new Date();
     const otpCode = await OtpCodeModel.findOne({
       email,
       code,
       isUsed: false,
-      expiresAt: { $gt: now }
-    });
-    
-    return otpCode ? otpCode.toObject() as unknown as OtpCode : undefined;
-  }
-
-  async checkOtpCodeValidity(email: string, code: string): Promise<OtpCode | undefined> {
-    if (!this.connected) return this.fallbackStorage.checkOtpCodeValidity(email, code);
-    
-    const now = new Date();
-    const otpCode = await OtpCodeModel.findOne({
-      email,
-      code,
       expiresAt: { $gt: now }
     });
     

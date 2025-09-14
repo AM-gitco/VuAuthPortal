@@ -67,7 +67,6 @@ export default function AuthPage() {
           <LoginForm
             onSwitchToSignup={() => setCurrentView("signup")}
             onSwitchToForgotPassword={() => setCurrentView("forgotPassword")}
-            onSwitchToOTP={switchToOTP}
           />
         );
     }
